@@ -21,6 +21,9 @@ allprojects {
     repositories {
         mavenCentral()
         google()
+        flatDir {
+            dirs 'libs', 'C:\\Users\\6381programming.W23-CAD-33\\navx-micro\\android\\libs'
+        }
     }
 }
 
