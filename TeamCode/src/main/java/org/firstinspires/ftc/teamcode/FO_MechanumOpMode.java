@@ -26,6 +26,7 @@ public class FO_MechanumOpMode extends LinearOpMode {
         DcMotor backRightMotor = hardwareMap.dcMotor.get("backRightMotor");
         DcMotor armMotor = hardwareMap.dcMotor.get("armMotor");
         DcMotor liftMotor = hardwareMap.dcMotor.get("liftMotor");
+        DcMotor intakeMotor = hardwareMap.dcMotor.get("intakeMotor");
         AHRS navx_device;
         navXPIDController yawPIDController;
         ElapsedTime runtime = new ElapsedTime();
@@ -39,6 +40,12 @@ public class FO_MechanumOpMode extends LinearOpMode {
         final double YAW_PID_P = 0.005;
         final double YAW_PID_I = 0.0;
         final double YAW_PID_D = 0.0;
+        double z = 0.75;
+        double y = -gamepad1.left_stick_y * z; // Remember, Y stick value is reversed
+        double x = gamepad1.left_stick_x * z;
+        double rx = gamepad1.right_stick_x * z;
+
+        boolean armUp = false;
 
         boolean calibration_complete = false;
         armMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
@@ -66,9 +73,11 @@ public class FO_MechanumOpMode extends LinearOpMode {
         if (isStopRequested()) return;
 
         while (opModeIsActive()) {
-            double y = -gamepad1.left_stick_y; // Remember, Y stick value is reversed
-            double x = gamepad1.left_stick_x;
-            double rx = gamepad1.right_stick_x;
+            telemetry.addData("armMotor-encoder", armMotor.getCurrentPosition());
+            telemetry.update();
+            y = -gamepad1.left_stick_y * z; // Remember, Y stick value is reversed
+            x = gamepad1.left_stick_x * z;
+            rx = gamepad1.right_stick_x * z;
 
             // This button choice was made so that it is hard to hit on accident,
             // it can be freely changed based on preference.
@@ -99,6 +108,24 @@ public class FO_MechanumOpMode extends LinearOpMode {
             backLeftMotor.setPower(backLeftPower);
             frontRightMotor.setPower(frontRightPower);
             backRightMotor.setPower(backRightPower);
+
+            if (gamepad1.dpad_up) {
+                if (!armUp) {
+                    armMotor.setTargetPosition(11250);
+                    armUp = true;
+                } else {
+                    armMotor.setTargetPosition(0);
+                    armUp = false;
+                }
+            }
+
+            if (gamepad1.right_bumper) {
+                z = 0.25;
+            } else if (gamepad1.left_bumper) {
+                z = 1;
+            } else {
+                z = 0.75;
+            }
         }
     }
 }
