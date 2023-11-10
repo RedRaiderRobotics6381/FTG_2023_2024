@@ -12,7 +12,7 @@ import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.hardware.kauailabs.NavxMicroNavigationSensor;
 import com.kauailabs.navx.ftc.AHRS;
 import com.kauailabs.navx.ftc.navXPIDController;
-
+import java.text.DecimalFormat;
 import com.qualcomm.robotcore.hardware.Gamepad;
 
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
@@ -43,20 +43,33 @@ import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
 
 @TeleOp
 public class MechanumOpMode extends LinearOpMode {
-    IntegratingGyroscope gyro;
-    NavxMicroNavigationSensor navxMicro;
-    ElapsedTime timer = new ElapsedTime();
+    DcMotor frontLeftMotor = hardwareMap.dcMotor.get("frontLeftMotor");
+    DcMotor backLeftMotor = hardwareMap.dcMotor.get("backLeftMotor");
+    DcMotor frontRightMotor = hardwareMap.dcMotor.get("frontRightMotor");
+    DcMotor backRightMotor = hardwareMap.dcMotor.get("backRightMotor");
+    DcMotor armMotor = hardwareMap.dcMotor.get("armMotor");
+    DcMotor liftMotor = hardwareMap.dcMotor.get("liftMotor");
 
+    AHRS navx_device;
+    navXPIDController yawPIDController;
+    ElapsedTime runtime = new ElapsedTime();
+
+    final byte NAVX_DEVICE_UPDATE_RATE_HZ = 50;
+
+    final double TARGET_ANGLE_DEGREES = 90.0;
+    final double TOLERANCE_DEGREES = 2.0;
+    final double MIN_MOTOR_OUTPUT_VALUE = -1.0;
+    final double MAX_MOTOR_OUTPUT_VALUE = 1.0;
+    final double YAW_PID_P = 0.005;
+    final double YAW_PID_I = 0.0;
+    final double YAW_PID_D = 0.0;
+
+    boolean calibration_complete = false;
     @Override
     public void runOpMode() throws InterruptedException {
         // Declare our motors
         // Make sure your ID's match your configuration
-        DcMotor frontLeftMotor = hardwareMap.dcMotor.get("frontLeftMotor");
-        DcMotor backLeftMotor = hardwareMap.dcMotor.get("backLeftMotor");
-        DcMotor frontRightMotor = hardwareMap.dcMotor.get("frontRightMotor");
-        DcMotor backRightMotor = hardwareMap.dcMotor.get("backRightMotor");
-        DcMotor armMotor = hardwareMap.dcMotor.get("armMotor");
-        DcMotor liftMotor = hardwareMap.dcMotor.get("liftMotor");
+
         armMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         // Reverse the right side motors. This may be wrong for your setup.
         // If your robot moves backwards when commanded to go forwards,
@@ -64,10 +77,16 @@ public class MechanumOpMode extends LinearOpMode {
         // See the note about this earlier on this page.
         frontRightMotor.setDirection(DcMotorSimple.Direction.REVERSE);
         backRightMotor.setDirection(DcMotorSimple.Direction.REVERSE);
+        navx_device = AHRS.getInstance(hardwareMap.get(NavxMicroNavigationSensor.class, "navx"), AHRS.DeviceDataType.kProcessedData, NAVX_DEVICE_UPDATE_RATE_HZ);
+        yawPIDController = new navXPIDController( navx_device, navXPIDController.navXTimestampedDataSource.YAW);
 
+        /* Configure the PID controller */
+        yawPIDController.setSetpoint(TARGET_ANGLE_DEGREES);
+        yawPIDController.setContinuous(true);
+        yawPIDController.setOutputRange(MIN_MOTOR_OUTPUT_VALUE, MAX_MOTOR_OUTPUT_VALUE);
+        yawPIDController.setTolerance(navXPIDController.ToleranceType.ABSOLUTE, TOLERANCE_DEGREES);
+        yawPIDController.setPID(YAW_PID_P, YAW_PID_I, YAW_PID_D);
 
-        navxMicro = hardwareMap.get(NavxMicroNavigationSensor.class, "navx");
-        gyro = (IntegratingGyroscope) navxMicro;
 
         double z = 0.75;
         double y = gamepad1.left_stick_y * z;
@@ -80,7 +99,6 @@ public class MechanumOpMode extends LinearOpMode {
         double backLeftPower = (y - x + rx) / denominator;
         double frontRightPower = (y - x - rx) / denominator;
         double backRightPower = (y + x - rx) / denominator;
-        navx_device = AHRS.getInstance(hardwareMap.get(NavxMicroNavigationSensor.class, "navx"), AHRS.DeviceDataType.kProcessedData);
 
 
             waitForStart();
@@ -88,62 +106,61 @@ public class MechanumOpMode extends LinearOpMode {
             if (isStopRequested()) return;
 
             while (opModeIsActive()) {
-
-                double rcw = pJoystick->GetTwist();
-                double forwrd = pJoystick->GetY() * -1; /* Invert stick Y axis */
-                double strafe = pJoystick->GetX();
-
-                double pi = 3.1415926;
-
-                /* Adjust Joystick X/Y inputs by navX MXP yaw angle */
-
-                double gyro_degrees = ahrs->GetYaw();
-                double gyro_radians = gyro_degrees * pi/180;
-                double temp = forwrd * cos(gyro_radians) +
-                        strafe * sin(gyro_radians);
-                strafe = -forwrd * sin(gyro_radians) +
-                        strafe * cos(gyro_radians);
-                fwd = temp;
-
-                /* At this point, Joystick X/Y (strafe/forwrd) vectors have been */
-                /* rotated by the gyro angle, and can be sent to drive system */
-
-                telemetry.log().add("Gyro Calibrating. Do Not Move!");
-
-                // Wait until the gyro calibration is complete
-                timer.reset();
-                while (navxMicro.isCalibrating()) {
-                    telemetry.addData("calibrating", "%s", Math.round(timer.seconds()) % 2 == 0 ? "|.." : "..|");
-                    telemetry.update();
-                    Thread.sleep(50);
+                while ( !calibration_complete ) {
+            /* navX-Micro Calibration completes automatically ~15 seconds after it is
+            powered on, as long as the device is still.  To handle the case where the
+            navX-Micro has not been able to calibrate successfully, hold off using
+            the navX-Micro Yaw value until calibration is complete.
+             */
+                    calibration_complete = !navx_device.isCalibrating();
+                    if (!calibration_complete) {
+                        telemetry.addData("navX-Micro", "Startup Calibration in Progress");
+                    }
                 }
-                telemetry.log().clear();
-                telemetry.log().add("Gyro Calibrated. Press Start.");
-                telemetry.clear();
-                telemetry.update();
+                navx_device.zeroYaw();
 
-                // Wait for the start button to be pressed
-                waitForStart();
-                telemetry.log().clear();
+                try {
+                    yawPIDController.enable(true);
 
-                // Read dimensionalized data from the gyro. This gyro can report angular velocities
-                // about all three axes. Additionally, it internally integrates the Z axis to
-                // be able to report an absolute angular Z orientation.
-                AngularVelocity rates = gyro.getAngularVelocity(AngleUnit.DEGREES);
-                Orientation angles = gyro.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.DEGREES);
+        /* Wait for new Yaw PID output values, then update the motors
+           with the new PID value with each new output value.
+         */
 
-                telemetry.addLine()
-                        .addData("dx", formatRate(rates.xRotationRate))
-                        .addData("dy", formatRate(rates.yRotationRate))
-                        .addData("dz", "%s deg/s", formatRate(rates.zRotationRate));
+                    final double TOTAL_RUN_TIME_SECONDS = 30.0;
+                    int DEVICE_TIMEOUT_MS = 500;
+                    navXPIDController.PIDResult yawPIDResult = new navXPIDController.PIDResult();
 
-                telemetry.addLine()
-                        .addData("heading", formatAngle(angles.angleUnit, angles.firstAngle))
-                        .addData("roll", formatAngle(angles.angleUnit, angles.secondAngle))
-                        .addData("pitch", "%s deg", formatAngle(angles.angleUnit, angles.thirdAngle));
-                telemetry.update();
+                    DecimalFormat df = new DecimalFormat("#.##");
 
-                idle(); // Always call idle() at the bottom of your while(opModeIsActive()) loop
+                    while ( (runtime.time() < TOTAL_RUN_TIME_SECONDS) &&
+                            !Thread.currentThread().isInterrupted()) {
+                        if (yawPIDController.waitForNewUpdate(yawPIDResult, DEVICE_TIMEOUT_MS)) {
+                            if (yawPIDResult.isOnTarget()) {
+                                //leftMotor.setPowerFloat();
+                                //rightMotor.setPowerFloat();
+                                telemetry.addData("PIDOutput", df.format(0.00));
+                            } else {
+                                double output = yawPIDResult.getOutput();
+                                //leftMotor.setPower(output);
+                                //rightMotor.setPower(-output);
+                                telemetry.addData("PIDOutput", df.format(output) + ", " +
+                                        df.format(-output));
+                            }
+                        } else {
+                            /* A timeout occurred */
+                            Log.w("navXRotateOp", "Yaw PID waitForNewUpdate() TIMEOUT.");
+                        }
+                        telemetry.addData("Yaw", df.format(navx_device.getYaw()));
+                    }
+                }
+                catch(InterruptedException ex) {
+                    Thread.currentThread().interrupt();
+                }
+                finally {
+                    navx_device.close();
+                    telemetry.addData("LinearOp", "Complete");
+                }
+
 
 
                 telemetry.update();
