@@ -10,13 +10,23 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.util.ElapsedTime;
+import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
+import org.opencv.core.Mat;
+import org.opencv.core.Point;
+import org.opencv.core.Scalar;
+import org.opencv.imgproc.Imgproc;
+import org.openftc.easyopencv.OpenCvCamera;
+import org.openftc.easyopencv.OpenCvCameraFactory;
+import org.openftc.easyopencv.OpenCvCameraRotation;
+import org.openftc.easyopencv.OpenCvPipeline;
+import org.openftc.easyopencv.OpenCvWebcam;
 
 import java.text.DecimalFormat;
 
 
 @TeleOp
 public class FO_MechanumOpMode extends LinearOpMode {
-
+    OpenCvWebcam webcam;
 
     @Override
     public void runOpMode() throws InterruptedException {
@@ -63,10 +73,23 @@ public class FO_MechanumOpMode extends LinearOpMode {
         yawPIDController.setTolerance(navXPIDController.ToleranceType.ABSOLUTE, TOLERANCE_DEGREES);
         yawPIDController.setPID(YAW_PID_P, YAW_PID_I, YAW_PID_D);
 
-        // Retrieve the IMU from the hardware map
+        // Webcam Stuff
+        int cameraMonitorViewId = hardwareMap.appContext.getResources().getIdentifier("cameraMonitorViewId", "id", hardwareMap.appContext.getPackageName());
+        webcam = OpenCvCameraFactory.getInstance().createWebcam(hardwareMap.get(WebcamName.class, "Webcam 1"), cameraMonitorViewId);
+        webcam.setPipeline(new SamplePipeline());
+        webcam.setMillisecondsPermissionTimeout(5000); // Timeout for obtaining permission is configurable. Set before opening.
+        webcam.openCameraDeviceAsync(new OpenCvCamera.AsyncCameraOpenListener()
+        {
+            @Override
+            public void onOpened()
+            {
+                webcam.startStreaming(320, 240, OpenCvCameraRotation.UPRIGHT);
+            }
+            @Override
+            public void onError(int errorCode){
 
-
-
+            }
+        });
 
         waitForStart();
 
@@ -118,13 +141,60 @@ public class FO_MechanumOpMode extends LinearOpMode {
                     armUp = false;
                 }
             }
-
+            while (gamepad1.x){
+                intakeMotor.setPower(1);
+            }
+            while (gamepad1.y){
+                intakeMotor.setPower(-0.5);
+            }
             if (gamepad1.right_bumper) {
                 z = 0.25;
             } else if (gamepad1.left_bumper) {
                 z = 1;
             } else {
                 z = 0.75;
+            }
+            if(gamepad1.a)
+            {
+                webcam.stopStreaming();
+            }
+        }
+    }
+    class SamplePipeline extends OpenCvPipeline
+    {
+        boolean viewportPaused;
+
+        @Override
+        public Mat processFrame(Mat input)
+        {
+
+            Imgproc.rectangle(
+                    input,
+                    new Point(
+                            input.cols()/4.0,
+                            input.rows()/4.0),
+                    new Point(
+                            input.cols()*(3f/4f),
+                            input.rows()*(3f/4f)),
+                    new Scalar(0, 255, 0), 4);
+
+            return input;
+        }
+
+        @Override
+        public void onViewportTapped()
+        {
+
+
+            viewportPaused = !viewportPaused;
+
+            if(viewportPaused)
+            {
+                webcam.pauseViewport();
+            }
+            else
+            {
+                webcam.resumeViewport();
             }
         }
     }
