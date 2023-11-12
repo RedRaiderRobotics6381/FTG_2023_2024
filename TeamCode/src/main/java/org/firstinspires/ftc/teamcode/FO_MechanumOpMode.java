@@ -8,9 +8,11 @@ import com.qualcomm.hardware.kauailabs.NavxMicroNavigationSensor;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.util.ElapsedTime;
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
+import org.firstinspires.ftc.teamcode.util.Encoder;
 import org.opencv.core.Mat;
 import org.opencv.core.Point;
 import org.opencv.core.Scalar;
@@ -60,9 +62,13 @@ public class FO_MechanumOpMode extends LinearOpMode {
 
         boolean calibration_complete = false;
         armMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        armMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         liftMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        armMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        liftMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        //liftMotor.setTargetPosition(0);
+
+        /*armMotor.setTargetPosition(0);
+        armMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);*/
+        //liftMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
         frontRightMotor.setDirection(DcMotorSimple.Direction.REVERSE);
         backRightMotor.setDirection(DcMotorSimple.Direction.REVERSE);
 
@@ -104,7 +110,11 @@ public class FO_MechanumOpMode extends LinearOpMode {
             telemetry.addData("armMotor-target", armMotor.getTargetPosition());
             telemetry.addData("liftMotor-encoder", liftMotor.getCurrentPosition());
             telemetry.addData("liftMotor-target", liftMotor.getTargetPosition());
+            telemetry.addData("armMotor-Power", armMotor.getPower());
+            telemetry.addData("armMotor-Mode",armMotor.getMode());
+            telemetry.addData("armUp",armUp);
             telemetry.update();
+
             y = -gamepad1.left_stick_y * z; // Remember, Y stick value is reversed
             x = gamepad1.left_stick_x * z;
             rx = gamepad1.right_stick_x * z;
@@ -112,7 +122,7 @@ public class FO_MechanumOpMode extends LinearOpMode {
             // This button choice was made so that it is hard to hit on accident,
             // it can be freely changed based on preference.
             // The equivalent button is start on Xbox-style controllers.
-            if (gamepad1.options) {
+            if (gamepad1.start) {
                 navx_device.zeroYaw();
             }
             navXPIDController.PIDResult yawPIDResult = new navXPIDController.PIDResult();
@@ -133,7 +143,7 @@ public class FO_MechanumOpMode extends LinearOpMode {
             double backLeftPower = (rotY - rotX + rx) / denominator;
             double frontRightPower = (rotY - rotX - rx) / denominator;
             double backRightPower = (rotY + rotX - rx) / denominator;
-
+armMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
 
             frontLeftMotor.setPower(frontLeftPower);
             backLeftMotor.setPower(backLeftPower);
@@ -142,22 +152,30 @@ public class FO_MechanumOpMode extends LinearOpMode {
 
             if (gamepad2.dpad_up) {
 
-                if (!armUp) {
+                    if (armMotor.getCurrentPosition() >= 8700){
 
-                    armUp = true;
+                    armMotor.setPower(-1);
 
-                    armMotor.setTargetPosition(11250);
+                    }
 
-                } else {
+                    else if (armMotor.getCurrentPosition() <= 0) {
+                        armMotor.setPower(1);
+                    }
 
 
-                    armMotor.setTargetPosition(0);
-                    armUp = false;
-                }
             }
-            if (gamepad1.x){
+            if (armMotor.getCurrentPosition() > 8700 && armMotor.getPower() > 0){
+                armMotor.setPower(0);
+            }
+            if (armMotor.getCurrentPosition() < 0 && armMotor.getPower() < 0){
+                armMotor.setPower(0);
+            }
+            if (gamepad2.right_stick_y >= 0.05 || gamepad2.right_stick_y <= -0.05){
+                armMotor.setPower(gamepad2.right_stick_y);
+            }
+            if (gamepad1.left_trigger >= 0.75){
                 intakeMotor.setPower(1);
-            } else if (gamepad1.y){
+            } else if (gamepad1.right_trigger >= 0.75){
                 intakeMotor.setPower(-0.5);
             } else {
                 intakeMotor.setPower(0);
@@ -174,9 +192,22 @@ public class FO_MechanumOpMode extends LinearOpMode {
             {
                 webcam.stopStreaming();
             }
+            /** test to find upper and lower limits
+             * if(liftMotor.getCurrentPosition <= (upper limit) && liftMotor.getCurrentPosition ></=>= (lower limit)){
+             *   liftMotor.setPower(gamepad2.left_stick_y);
+             * } else if (liftMotor.getCurrentPosition > (upper limit)){
+             *liftMotor.setPower(-Math.abs(gamepad2.left_stick_y));
+             * } else if (liftMotor.getCurrentPosition > (upper limit)){
+             * liftMotor.setPower(Math.abs(gamepad2.left_stick_y)););
+             * }
+             */
             liftMotor.setPower(gamepad2.left_stick_y);
             if (gamepad2.a){
                 liftMotor.setTargetPosition(0);
+            } else if (gamepad2.b){
+                liftMotor.setTargetPosition(5000);
+            } else if(gamepad2.x){
+                liftMotor.setTargetPosition(10000);
             }
         }
     }
