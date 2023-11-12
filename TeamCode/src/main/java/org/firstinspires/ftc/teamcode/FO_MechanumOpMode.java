@@ -20,6 +20,7 @@ import org.openftc.easyopencv.OpenCvCameraFactory;
 import org.openftc.easyopencv.OpenCvCameraRotation;
 import org.openftc.easyopencv.OpenCvPipeline;
 import org.openftc.easyopencv.OpenCvWebcam;
+import org.openftc.apriltag.AprilTagDetection;
 
 import java.text.DecimalFormat;
 
@@ -27,7 +28,7 @@ import java.text.DecimalFormat;
 @TeleOp
 public class FO_MechanumOpMode extends LinearOpMode {
     OpenCvWebcam webcam;
-
+    boolean armUp = false;
     @Override
     public void runOpMode() throws InterruptedException {
         DcMotor frontLeftMotor = hardwareMap.dcMotor.get("frontLeftMotor");
@@ -55,10 +56,13 @@ public class FO_MechanumOpMode extends LinearOpMode {
         double x = gamepad1.left_stick_x * z;
         double rx = gamepad1.right_stick_x * z;
 
-        boolean armUp = false;
+
 
         boolean calibration_complete = false;
         armMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        liftMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        armMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        liftMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
         frontRightMotor.setDirection(DcMotorSimple.Direction.REVERSE);
         backRightMotor.setDirection(DcMotorSimple.Direction.REVERSE);
 
@@ -97,6 +101,9 @@ public class FO_MechanumOpMode extends LinearOpMode {
 
         while (opModeIsActive()) {
             telemetry.addData("armMotor-encoder", armMotor.getCurrentPosition());
+            telemetry.addData("armMotor-target", armMotor.getTargetPosition());
+            telemetry.addData("liftMotor-encoder", liftMotor.getCurrentPosition());
+            telemetry.addData("liftMotor-target", liftMotor.getTargetPosition());
             telemetry.update();
             y = -gamepad1.left_stick_y * z; // Remember, Y stick value is reversed
             x = gamepad1.left_stick_x * z;
@@ -127,29 +134,38 @@ public class FO_MechanumOpMode extends LinearOpMode {
             double frontRightPower = (rotY - rotX - rx) / denominator;
             double backRightPower = (rotY + rotX - rx) / denominator;
 
+
             frontLeftMotor.setPower(frontLeftPower);
             backLeftMotor.setPower(backLeftPower);
             frontRightMotor.setPower(frontRightPower);
             backRightMotor.setPower(backRightPower);
 
-            if (gamepad1.dpad_up) {
+            if (gamepad2.dpad_up) {
+
                 if (!armUp) {
-                    armMotor.setTargetPosition(11250);
+
                     armUp = true;
+
+                    armMotor.setTargetPosition(11250);
+
                 } else {
+
+
                     armMotor.setTargetPosition(0);
                     armUp = false;
                 }
             }
-            while (gamepad1.x){
+            if (gamepad1.x){
                 intakeMotor.setPower(1);
-            }
-            while (gamepad1.y){
+            } else if (gamepad1.y){
                 intakeMotor.setPower(-0.5);
+            } else {
+                intakeMotor.setPower(0);
             }
-            if (gamepad1.right_bumper) {
+
+            if (gamepad1.left_bumper) {
                 z = 0.25;
-            } else if (gamepad1.left_bumper) {
+            } else if (gamepad1.right_bumper) {
                 z = 1;
             } else {
                 z = 0.75;
@@ -157,6 +173,10 @@ public class FO_MechanumOpMode extends LinearOpMode {
             if(gamepad1.a)
             {
                 webcam.stopStreaming();
+            }
+            liftMotor.setPower(gamepad2.left_stick_y);
+            if (gamepad2.a){
+                liftMotor.setTargetPosition(0);
             }
         }
     }
