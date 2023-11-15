@@ -31,6 +31,7 @@ import java.text.DecimalFormat;
 public class FO_MechanumOpMode extends LinearOpMode {
     OpenCvWebcam webcam;
     boolean armUp = false;
+    boolean keepGoing = false;
     @Override
     public void runOpMode() throws InterruptedException {
         DcMotor frontLeftMotor = hardwareMap.dcMotor.get("frontLeftMotor");
@@ -65,12 +66,14 @@ public class FO_MechanumOpMode extends LinearOpMode {
         armMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         liftMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         //liftMotor.setTargetPosition(0);
-
+        liftMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         /*armMotor.setTargetPosition(0);
         armMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);*/
         //liftMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
         frontRightMotor.setDirection(DcMotorSimple.Direction.REVERSE);
         backRightMotor.setDirection(DcMotorSimple.Direction.REVERSE);
+        liftMotor.setDirection(DcMotorSimple.Direction.REVERSE);
+        armMotor.setDirection(DcMotorSimple.Direction.REVERSE);
 
         navx_device = AHRS.getInstance(hardwareMap.get(NavxMicroNavigationSensor.class, "navx"), AHRS.DeviceDataType.kProcessedData, NAVX_DEVICE_UPDATE_RATE_HZ);
         yawPIDController = new navXPIDController( navx_device, navXPIDController.navXTimestampedDataSource.YAW);
@@ -107,12 +110,7 @@ public class FO_MechanumOpMode extends LinearOpMode {
 
         while (opModeIsActive()) {
             telemetry.addData("armMotor-encoder", armMotor.getCurrentPosition());
-            telemetry.addData("armMotor-target", armMotor.getTargetPosition());
             telemetry.addData("liftMotor-encoder", liftMotor.getCurrentPosition());
-            telemetry.addData("liftMotor-target", liftMotor.getTargetPosition());
-            telemetry.addData("armMotor-Power", armMotor.getPower());
-            telemetry.addData("armMotor-Mode",armMotor.getMode());
-            telemetry.addData("armUp",armUp);
             telemetry.update();
 
             y = -gamepad1.left_stick_y * z; // Remember, Y stick value is reversed
@@ -130,7 +128,7 @@ public class FO_MechanumOpMode extends LinearOpMode {
             double botHeading = navx_device.getYaw();
 
             // Rotate the movement direction counter to the bot's rotation
-            double rotX = x * Math.cos(-botHeading) - y * Math.sin(-botHeading);
+            /*double rotX = x * Math.cos(-botHeading) - y * Math.sin(-botHeading);
             double rotY = x * Math.sin(-botHeading) + y * Math.cos(-botHeading);
 
             rotX = rotX * 1.1;  // Counteract imperfect strafing
@@ -142,8 +140,13 @@ public class FO_MechanumOpMode extends LinearOpMode {
             double frontLeftPower = (rotY + rotX + rx) / denominator;
             double backLeftPower = (rotY - rotX + rx) / denominator;
             double frontRightPower = (rotY - rotX - rx) / denominator;
-            double backRightPower = (rotY + rotX - rx) / denominator;
-armMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+            double backRightPower = (rotY + rotX - rx) / denominator;*/
+           double denominator = Math.max(Math.abs(y) + Math.abs(x) + Math.abs(rx), 1);
+           double frontLeftPower = (y + x + rx) / denominator;
+           double backLeftPower = (y - x + rx) / denominator;
+           double frontRightPower = (y - x - rx) / denominator;
+           double backRightPower = (y + x - rx) / denominator;
+            armMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
 
             frontLeftMotor.setPower(frontLeftPower);
             backLeftMotor.setPower(backLeftPower);
@@ -151,27 +154,21 @@ armMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
             backRightMotor.setPower(backRightPower);
 
             if (gamepad2.dpad_up) {
-
-                    if (armMotor.getCurrentPosition() >= 8700){
-
+                    if (armMotor.getCurrentPosition() >= 10000){
                     armMotor.setPower(-1);
-
                     }
-
                     else if (armMotor.getCurrentPosition() <= 0) {
                         armMotor.setPower(1);
                     }
-
-
             }
-            if (armMotor.getCurrentPosition() > 8700 && armMotor.getPower() > 0){
+            if (armMotor.getCurrentPosition() > 10000 && armMotor.getPower() > 0){
                 armMotor.setPower(0);
             }
             if (armMotor.getCurrentPosition() < 0 && armMotor.getPower() < 0){
                 armMotor.setPower(0);
             }
-            if (gamepad2.right_stick_y >= 0.05 || gamepad2.right_stick_y <= -0.05){
-                armMotor.setPower(gamepad2.right_stick_y);
+            if (gamepad2.right_stick_y >= 0.1 || gamepad2.right_stick_y <= -0.1){
+                armMotor.setPower(-gamepad2.right_stick_y);
             }
             if (gamepad1.left_trigger >= 0.75){
                 intakeMotor.setPower(1);
@@ -201,13 +198,44 @@ armMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
              * liftMotor.setPower(Math.abs(gamepad2.left_stick_y)););
              * }
              */
-            liftMotor.setPower(gamepad2.left_stick_y);
-            if (gamepad2.a){
-                liftMotor.setTargetPosition(0);
-            } else if (gamepad2.b){
-                liftMotor.setTargetPosition(5000);
-            } else if(gamepad2.x){
-                liftMotor.setTargetPosition(10000);
+
+
+            if (gamepad2.left_stick_y >= 0.1 || gamepad2.left_stick_y <= -0.1){
+            liftMotor.setPower(-gamepad2.left_stick_y);
+            sleep(10);
+            liftMotor.setPower(0);
+             }
+            if (gamepad2.a && liftMotor.getCurrentPosition() < 0){
+                liftMotor.setPower(1);
+                keepGoing = true;
+            } else if (gamepad2.a && liftMotor.getCurrentPosition() > 0){
+                liftMotor.setPower(-1);
+                keepGoing = true;
+            } else if(gamepad2.b && liftMotor.getCurrentPosition() > 1500){
+                liftMotor.setPower(-1);
+                keepGoing = false;
+            } else if(gamepad2.b && liftMotor.getCurrentPosition() < 1500){
+                liftMotor.setPower(1);
+                keepGoing = false;
+            } else if(gamepad2.x && liftMotor.getCurrentPosition() > 2900){
+                liftMotor.setPower(-1);
+                keepGoing = true;
+            }else if(gamepad2.x && liftMotor.getCurrentPosition() < 2900){
+                liftMotor.setPower(1);
+                keepGoing = true;
+            }
+            if (liftMotor.getCurrentPosition() > 2900 && liftMotor.getPower() > 0){
+                liftMotor.setPower(0);
+            }
+            if (liftMotor.getCurrentPosition() < 0 && liftMotor.getPower() < 0){
+                liftMotor.setPower(0);
+            } if (!keepGoing){
+                if (liftMotor.getCurrentPosition() < 1600 && liftMotor.getCurrentPosition() > 1400){
+                    liftMotor.setPower(0);
+                    keepGoing = true;
+                }
+            } else {
+
             }
         }
     }
