@@ -41,16 +41,16 @@ public class FO_MechanumOpMode extends LinearOpMode {
         final double YAW_PID_I = 0.0;
         final double YAW_PID_D = 0.0;
         double z = 0.75;
-        double y = -gamepad1.left_stick_y * z; // Remember, Y stick value is reversed
-        double x = gamepad1.left_stick_x * z;
-        double rx = gamepad1.right_stick_x * z;
+        double y = gamepad1.left_stick_y * z; // Remember, Y stick value is reversed
+        double x = -gamepad1.left_stick_x * z;
+        double rx = -gamepad1.right_stick_x * z;
 
         boolean armUp = false;
 
         boolean calibration_complete = false;
         armMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        frontRightMotor.setDirection(DcMotorSimple.Direction.REVERSE);
-        backRightMotor.setDirection(DcMotorSimple.Direction.REVERSE);
+        frontLeftMotor.setDirection(DcMotorSimple.Direction.REVERSE);
+        backLeftMotor.setDirection(DcMotorSimple.Direction.REVERSE);
 
         navx_device = AHRS.getInstance(hardwareMap.get(NavxMicroNavigationSensor.class, "navx"), AHRS.DeviceDataType.kProcessedData, NAVX_DEVICE_UPDATE_RATE_HZ);
         yawPIDController = new navXPIDController( navx_device, navXPIDController.navXTimestampedDataSource.YAW);
@@ -92,6 +92,7 @@ public class FO_MechanumOpMode extends LinearOpMode {
             // Rotate the movement direction counter to the bot's rotation
             double rotX = x * Math.cos(-botHeading) - y * Math.sin(-botHeading);
             double rotY = x * Math.sin(-botHeading) + y * Math.cos(-botHeading);
+
 
             rotX = rotX * 1.1;  // Counteract imperfect strafing
 
