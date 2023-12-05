@@ -29,31 +29,30 @@ public class Lift extends FO_MechanumOpMode {
 
 
         public void down() {
-            if (gamepad2.a && liftMotor.getCurrentPosition() < 0) {
+            if (liftMotor.getCurrentPosition() < 0) {
                 liftMotor.setPower(1);
                 keepGoing = true;
-            } else if (gamepad2.a && liftMotor.getCurrentPosition() > 0) {
+            } else if (liftMotor.getCurrentPosition() > 0) {
                 liftMotor.setPower(-1);
                 keepGoing = true;
             }
         }
         public void middle() {
-            if (gamepad2.b && liftMotor.getCurrentPosition() > 1500) {
+            if (liftMotor.getCurrentPosition() > 1500) {
                 liftMotor.setPower(-1);
                 keepGoing = false;
-            } else if (gamepad2.b && liftMotor.getCurrentPosition() < 1500) {
+            } else if (liftMotor.getCurrentPosition() < 1500) {
                 liftMotor.setPower(1);
                 keepGoing = false;
             }
         }
         public void top(){
-           if (gamepad2.x && liftMotor.getCurrentPosition() > 2900) {
+           if (liftMotor.getCurrentPosition() > 2900) {
                liftMotor.setPower(-1);
                keepGoing = true;
-           } else if (gamepad2.x && liftMotor.getCurrentPosition() < 2900) {
+           } else if (liftMotor.getCurrentPosition() < 2900) {
                liftMotor.setPower(1);
                keepGoing = true;
            }
         }
-
     }

@@ -30,6 +30,7 @@ public class FO_MechanumOpMode extends LinearOpMode {
     OpenCvWebcam webcam;
     boolean armUp = false;
     DcMotor liftMotor = hardwareMap.dcMotor.get("liftMotor");
+    DcMotor lift2Motor = hardwareMap.dcMotor.get("lift2Motor");
      public boolean keepGoing = false;
 
     @Override
@@ -46,6 +47,7 @@ public class FO_MechanumOpMode extends LinearOpMode {
         Servo Crabtake3 = hardwareMap.servo.get("Crabtake3");
         Servo Crabtake4 = hardwareMap.servo.get("Crabtake4");
         Lift Will = new Lift();
+        Lift2 Caleb = new Lift2();
         AHRS navx_device;
         navXPIDController yawPIDController;
         ElapsedTime runtime = new ElapsedTime();
@@ -194,26 +196,34 @@ public class FO_MechanumOpMode extends LinearOpMode {
                          */
                         if (gamepad2.a){
                             Will.down();
+                            Caleb.down();
                         } else if (gamepad2.b){
                             Will.middle();
+                            Caleb.middle();
                         } else if (gamepad2.x){
                             Will.top();
+                            Caleb.top();
                         }
 
             if (gamepad2.left_stick_y >= 0.1 || gamepad2.left_stick_y <= -0.1) {
                 liftMotor.setPower(-gamepad2.left_stick_y);
+                lift2Motor.setPower(-gamepad2.left_stick_y);
                 sleep(10);
                 liftMotor.setPower(0);
+                lift2Motor.setPower(0);
             }
             if (liftMotor.getCurrentPosition() > 2900 && liftMotor.getPower() > 0) {
                 liftMotor.setPower(0);
+                lift2Motor.setPower(0);
             }
             if (liftMotor.getCurrentPosition() < 0 && liftMotor.getPower() < 0) {
                 liftMotor.setPower(0);
+                lift2Motor.setPower(0);
             }
             if (!keepGoing) {
                 if (liftMotor.getCurrentPosition() < 1600 && liftMotor.getCurrentPosition() > 1400) {
                     liftMotor.setPower(0);
+                    lift2Motor.setPower(0);
                     keepGoing = true;
                 }
             } else {
