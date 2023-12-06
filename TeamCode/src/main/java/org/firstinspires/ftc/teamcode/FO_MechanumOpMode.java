@@ -28,28 +28,25 @@ import java.text.DecimalFormat;
 @TeleOp
 public class FO_MechanumOpMode extends LinearOpMode {
     OpenCvWebcam webcam;
-    boolean armUp = false;
     DcMotor liftMotor = hardwareMap.dcMotor.get("liftMotor");
     DcMotor lift2Motor = hardwareMap.dcMotor.get("lift2Motor");
+    DcMotor frontLeftMotor = hardwareMap.dcMotor.get("frontLeftMotor");
+    DcMotor backLeftMotor = hardwareMap.dcMotor.get("backLeftMotor");
+    DcMotor frontRightMotor = hardwareMap.dcMotor.get("frontRightMotor");
+    DcMotor backRightMotor = hardwareMap.dcMotor.get("backRightMotor");
+    DcMotor armMotor = hardwareMap.dcMotor.get("armMotor");
+    DcMotor intakeMotor = hardwareMap.dcMotor.get("intakeMotor");
+    Servo Crabtake1 = hardwareMap.servo.get("Crabtake1");
+    Servo Crabtake2 = hardwareMap.servo.get("Crabtake2");
+    Servo Crabtake3 = hardwareMap.servo.get("Crabtake3");
+    Servo Crabtake4 = hardwareMap.servo.get("Crabtake4");
+    Lift Will = new Lift();
+    Lift2 Caleb = new Lift2();
+    AHRS navx_device;
+    navXPIDController yawPIDController;
      public boolean keepGoing = false;
-
     @Override
     public void runOpMode() throws InterruptedException {
-        DcMotor frontLeftMotor = hardwareMap.dcMotor.get("frontLeftMotor");
-        DcMotor backLeftMotor = hardwareMap.dcMotor.get("backLeftMotor");
-        DcMotor frontRightMotor = hardwareMap.dcMotor.get("frontRightMotor");
-        DcMotor backRightMotor = hardwareMap.dcMotor.get("backRightMotor");
-        DcMotor armMotor = hardwareMap.dcMotor.get("armMotor");
-
-        DcMotor intakeMotor = hardwareMap.dcMotor.get("intakeMotor");
-        Servo Crabtake1 = hardwareMap.servo.get("Crabtake1");
-        Servo Crabtake2 = hardwareMap.servo.get("Crabtake2");
-        Servo Crabtake3 = hardwareMap.servo.get("Crabtake3");
-        Servo Crabtake4 = hardwareMap.servo.get("Crabtake4");
-        Lift Will = new Lift();
-        Lift2 Caleb = new Lift2();
-        AHRS navx_device;
-        navXPIDController yawPIDController;
         ElapsedTime runtime = new ElapsedTime();
         final byte NAVX_DEVICE_UPDATE_RATE_HZ = 50;
         final double TARGET_ANGLE_DEGREES = 90.0;
@@ -67,10 +64,11 @@ public class FO_MechanumOpMode extends LinearOpMode {
         armMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         armMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         liftMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        liftMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         //liftMotor.setTargetPosition(0);
         liftMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        /*
-        armMotor.setTargetPosition(0);
+        lift2Motor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        /*armMotor.setTargetPosition(0);
         armMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
         liftMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);*/
         frontRightMotor.setDirection(DcMotorSimple.Direction.REVERSE);
@@ -92,21 +90,19 @@ public class FO_MechanumOpMode extends LinearOpMode {
         webcam = OpenCvCameraFactory.getInstance().createWebcam(hardwareMap.get(WebcamName.class, "Webcam 1"), cameraMonitorViewId);
         webcam.setPipeline(new SamplePipeline());
         webcam.setMillisecondsPermissionTimeout(5000); // Timeout for obtaining permission is configurable. Set before opening.
-        webcam.openCameraDeviceAsync(new OpenCvCamera.AsyncCameraOpenListener()
-        {
+        webcam.openCameraDeviceAsync(new OpenCvCamera.AsyncCameraOpenListener() {
             @Override
-            public void onOpened()
-            {
+            public void onOpened() {
                 webcam.startStreaming(320, 240, OpenCvCameraRotation.UPRIGHT);
             }
             @Override
             public void onError(int errorCode){
+
             }
         });
         waitForStart();
         if (isStopRequested()) return;
         while (opModeIsActive()) {
-
             telemetry.addData("armMotor-encoder", armMotor.getCurrentPosition());
             telemetry.addData("liftMotor-encoder", liftMotor.getCurrentPosition());
             telemetry.update();
@@ -144,67 +140,55 @@ public class FO_MechanumOpMode extends LinearOpMode {
             backLeftMotor.setPower(backLeftPower);
             frontRightMotor.setPower(frontRightPower);
             backRightMotor.setPower(backRightPower);
-            if (gamepad2.a){
+            if (gamepad2.a) {
                 Crabtake1.setPosition(0.5);
                 Crabtake2.setPosition(0.5);
             }
             if (gamepad2.dpad_up) {
-
-                    if (armMotor.getCurrentPosition() >= 10000){
-                        armMotor.setPower(-1);
-                    }
-                    else if (armMotor.getCurrentPosition() <= 0) {
-                        armMotor.setPower(1);
-                    }
+                if (armMotor.getCurrentPosition() >= 10000) {
+                    armMotor.setPower(-1);
+                } else if (armMotor.getCurrentPosition() <= 0) {
+                    armMotor.setPower(1);
                 }
-
-                    if (armMotor.getCurrentPosition() > 10000 && armMotor.getPower() > 0) {
-                        armMotor.setPower(0);
-                    }
-                    if (armMotor.getCurrentPosition() < 0 && armMotor.getPower() < 0) {
-                        armMotor.setPower(0);
-                    }
-
-                        if (gamepad2.right_stick_y >= 0.1 || gamepad2.right_stick_y <= -0.1) {
-                            armMotor.setPower(-gamepad2.right_stick_y);
-                        }
-                        if (gamepad1.left_trigger >= 0.75) {
-                            intakeMotor.setPower(1);
-                        } else if (gamepad1.right_trigger >= 0.75) {
-                            intakeMotor.setPower(-0.5);
-                        } else {
-                            intakeMotor.setPower(0);
-                        }
-                        if (gamepad1.left_bumper) {
-                            z = 0.25;
-                        } else if (gamepad1.right_bumper) {
-                            z = 1;
-                        } else {
-                            z = 0.75;
-                        }
-                        if (gamepad1.a) {
-                            webcam.stopStreaming();
-                        }
-                        /** test to find upper and lower limits
-                         * if(liftMotor.getCurrentPosition <= (upper limit) && liftMotor.getCurrentPosition ></=>= (lower limit)){
-                         *   liftMotor.setPower(gamepad2.left_stick_y);
-                         * } else if (liftMotor.getCurrentPosition > (upper limit)){
-                         *liftMotor.setPower(-Math.abs(gamepad2.left_stick_y));
-                         * } else if (liftMotor.getCurrentPosition > (upper limit)){
-                         * liftMotor.setPower(Math.abs(gamepad2.left_stick_y)););
-                         * }
-                         */
-                        if (gamepad2.a){
-                            Will.down();
-                            Caleb.down();
-                        } else if (gamepad2.b){
-                            Will.middle();
-                            Caleb.middle();
-                        } else if (gamepad2.x){
-                            Will.top();
-                            Caleb.top();
-                        }
-
+            }
+            if (armMotor.getCurrentPosition() > 10000 && armMotor.getPower() > 0) {
+                armMotor.setPower(0);
+            }
+            if (armMotor.getCurrentPosition() < 0 && armMotor.getPower() < 0) {
+                armMotor.setPower(0);
+            }
+            if (gamepad2.right_stick_y >= 0.1 || gamepad2.right_stick_y <= -0.1) {
+                armMotor.setPower(-gamepad2.right_stick_y);
+            }
+            if (gamepad1.left_bumper) {
+                z = 0.25;
+            } else if (gamepad1.right_bumper) {
+                z = 1;
+            } else {
+                z = 0.75;
+            }
+            if (gamepad1.a) {
+                webcam.stopStreaming();
+            }
+            /** test to find upper and lower limits
+             * if(liftMotor.getCurrentPosition <= (upper limit) && liftMotor.getCurrentPosition ></=>= (lower limit)){
+             *   liftMotor.setPower(gamepad2.left_stick_y);
+             * } else if (liftMotor.getCurrentPosition > (upper limit)){
+             *liftMotor.setPower(-Math.abs(gamepad2.left_stick_y));
+             * } else if (liftMotor.getCurrentPosition > (upper limit)){
+             * liftMotor.setPower(Math.abs(gamepad2.left_stick_y)););
+             * }
+             */
+            if (gamepad2.a) {
+                Will.down();
+                Caleb.down();
+            } else if (gamepad2.b) {
+                Will.middle();
+                Caleb.middle();
+            } else if (gamepad2.x) {
+                Will.top();
+                Caleb.top();
+            }
             if (gamepad2.left_stick_y >= 0.1 || gamepad2.left_stick_y <= -0.1) {
                 liftMotor.setPower(-gamepad2.left_stick_y);
                 lift2Motor.setPower(-gamepad2.left_stick_y);
@@ -226,37 +210,32 @@ public class FO_MechanumOpMode extends LinearOpMode {
                     lift2Motor.setPower(0);
                     keepGoing = true;
                 }
-            } else {
-
             }
-
-                        }
-                    }
-                    class SamplePipeline extends OpenCvPipeline {
-                        boolean viewportPaused;
-
-                        @Override
-                        public Mat processFrame(Mat input) {
-                            Imgproc.rectangle(
-                                    input,
-                                    new Point(
-                                            input.cols() / 4.0,
-                                            input.rows() / 4.0),
-                                    new Point(
-                                            input.cols() * (3f / 4f),
-                                            input.rows() * (3f / 4f)),
-                                    new Scalar(0, 255, 0), 4);
-                            return input;
-                        }
-
-                        @Override
-                        public void onViewportTapped() {
-                            viewportPaused = !viewportPaused;
-                            if (viewportPaused) {
-                                webcam.pauseViewport();
-                            } else {
-                                webcam.resumeViewport();
-                            }
-                        }
-                    }
-                }
+        }
+    }
+    class SamplePipeline extends OpenCvPipeline {
+        boolean viewportPaused;
+        @Override
+        public Mat processFrame(Mat input) {
+            Imgproc.rectangle(
+                    input,
+                    new Point(
+                            input.cols() / 4.0,
+                            input.rows() / 4.0),
+                    new Point(
+                            input.cols() * (3f / 4f),
+                            input.rows() * (3f / 4f)),
+                    new Scalar(0, 255, 0), 4);
+            return input;
+        }
+        @Override
+        public void onViewportTapped() {
+            viewportPaused = !viewportPaused;
+            if (viewportPaused) {
+                webcam.pauseViewport();
+            } else {
+                webcam.resumeViewport();
+            }
+        }
+    }
+}
