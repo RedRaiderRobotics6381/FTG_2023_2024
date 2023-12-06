@@ -78,7 +78,6 @@ import com.qualcomm.ftccommon.configuration.EditParameters;
 import com.qualcomm.ftccommon.configuration.FtcLoadFileActivity;
 import com.qualcomm.ftccommon.configuration.RobotConfigFile;
 import com.qualcomm.ftccommon.configuration.RobotConfigFileManager;
-import com.qualcomm.ftcrobotcontroller.BuildConfig;
 import com.qualcomm.ftcrobotcontroller.R;
 import com.qualcomm.hardware.HardwareFactory;
 import com.qualcomm.robotcore.eventloop.EventLoopManager;
@@ -402,8 +401,6 @@ public class FtcRobotControllerActivity extends Activity
     if (preferencesHelper.readBoolean(getString(R.string.pref_wifi_automute), false)) {
       initWifiMute(true);
     }
-
-    FtcAboutActivity.setBuildTimeFromBuildConfig(BuildConfig.APP_BUILD_TIME);
 
     // check to see if there is a preferred Wi-Fi to use.
     checkPreferredChannel();

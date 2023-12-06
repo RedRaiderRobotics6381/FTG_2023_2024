@@ -31,27 +31,33 @@ public class Lift extends FO_MechanumOpMode {
         public void down() {
             if (liftMotor.getCurrentPosition() < 0) {
                 liftMotor.setPower(1);
+                lift2Motor.setPower(1);
                 keepGoing = true;
             } else if (liftMotor.getCurrentPosition() > 0) {
                 liftMotor.setPower(-1);
+                lift2Motor.setPower(-1);
                 keepGoing = true;
             }
         }
         public void middle() {
             if (liftMotor.getCurrentPosition() > 1500) {
                 liftMotor.setPower(-1);
+                lift2Motor.setPower(-1);
                 keepGoing = false;
             } else if (liftMotor.getCurrentPosition() < 1500) {
                 liftMotor.setPower(1);
+                lift2Motor.setPower(1);
                 keepGoing = false;
             }
         }
         public void top(){
            if (liftMotor.getCurrentPosition() > 2900) {
                liftMotor.setPower(-1);
+               lift2Motor.setPower(-1);
                keepGoing = true;
            } else if (liftMotor.getCurrentPosition() < 2900) {
                liftMotor.setPower(1);
+               lift2Motor.setPower(1);
                keepGoing = true;
            }
         }

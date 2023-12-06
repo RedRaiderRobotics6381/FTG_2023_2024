@@ -36,12 +36,14 @@ public class FO_MechanumOpMode extends LinearOpMode {
     DcMotor backRightMotor = hardwareMap.dcMotor.get("backRightMotor");
     DcMotor armMotor = hardwareMap.dcMotor.get("armMotor");
     DcMotor intakeMotor = hardwareMap.dcMotor.get("intakeMotor");
-    Servo Crabtake1 = hardwareMap.servo.get("Crabtake1");
-    Servo Crabtake2 = hardwareMap.servo.get("Crabtake2");
-    Servo Crabtake3 = hardwareMap.servo.get("Crabtake3");
-    Servo Crabtake4 = hardwareMap.servo.get("Crabtake4");
+    Servo rightClaw = hardwareMap.servo.get("rightClaw");
+    Servo leftClaw = hardwareMap.servo.get("leftClaw");
+    Servo rightClawRot = hardwareMap.servo.get("rightClawRot");
+    Servo leftClawRot = hardwareMap.servo.get("leftClawRot");
+    Servo armServo = hardwareMap.servo.get("armServo");
+    Servo rightOuttake = hardwareMap.servo.get("rightOuttake");
+    Servo leftOuttake = hardwareMap.servo.get("leftOuttake");
     Lift Will = new Lift();
-    Lift2 Caleb = new Lift2();
     AHRS navx_device;
     navXPIDController yawPIDController;
      public boolean keepGoing = false;
@@ -75,8 +77,8 @@ public class FO_MechanumOpMode extends LinearOpMode {
         backRightMotor.setDirection(DcMotorSimple.Direction.REVERSE);
         liftMotor.setDirection(DcMotorSimple.Direction.REVERSE);
         armMotor.setDirection(DcMotorSimple.Direction.REVERSE);
-        Crabtake1.setDirection(Servo.Direction.REVERSE);
-        Crabtake3.setDirection(Servo.Direction.REVERSE);
+        rightClaw.setDirection(Servo.Direction.REVERSE);
+        rightClawRot.setDirection(Servo.Direction.REVERSE);
         navx_device = AHRS.getInstance(hardwareMap.get(NavxMicroNavigationSensor.class, "navx"), AHRS.DeviceDataType.kProcessedData, NAVX_DEVICE_UPDATE_RATE_HZ);
         yawPIDController = new navXPIDController( navx_device, navXPIDController.navXTimestampedDataSource.YAW);
         /* Configure the PID controller */
@@ -90,6 +92,7 @@ public class FO_MechanumOpMode extends LinearOpMode {
         webcam = OpenCvCameraFactory.getInstance().createWebcam(hardwareMap.get(WebcamName.class, "Webcam 1"), cameraMonitorViewId);
         webcam.setPipeline(new SamplePipeline());
         webcam.setMillisecondsPermissionTimeout(5000); // Timeout for obtaining permission is configurable. Set before opening.
+        
         webcam.openCameraDeviceAsync(new OpenCvCamera.AsyncCameraOpenListener() {
             @Override
             public void onOpened() {
@@ -100,6 +103,7 @@ public class FO_MechanumOpMode extends LinearOpMode {
 
             }
         });
+
         waitForStart();
         if (isStopRequested()) return;
         while (opModeIsActive()) {
@@ -141,8 +145,8 @@ public class FO_MechanumOpMode extends LinearOpMode {
             frontRightMotor.setPower(frontRightPower);
             backRightMotor.setPower(backRightPower);
             if (gamepad2.a) {
-                Crabtake1.setPosition(0.5);
-                Crabtake2.setPosition(0.5);
+                rightClaw.setPosition(0.5);
+                leftClaw.setPosition(0.5);
             }
             if (gamepad2.dpad_up) {
                 if (armMotor.getCurrentPosition() >= 10000) {
@@ -167,9 +171,7 @@ public class FO_MechanumOpMode extends LinearOpMode {
             } else {
                 z = 0.75;
             }
-            if (gamepad1.a) {
-                webcam.stopStreaming();
-            }
+
             /** test to find upper and lower limits
              * if(liftMotor.getCurrentPosition <= (upper limit) && liftMotor.getCurrentPosition ></=>= (lower limit)){
              *   liftMotor.setPower(gamepad2.left_stick_y);
@@ -179,15 +181,13 @@ public class FO_MechanumOpMode extends LinearOpMode {
              * liftMotor.setPower(Math.abs(gamepad2.left_stick_y)););
              * }
              */
+
             if (gamepad2.a) {
                 Will.down();
-                Caleb.down();
             } else if (gamepad2.b) {
                 Will.middle();
-                Caleb.middle();
             } else if (gamepad2.x) {
                 Will.top();
-                Caleb.top();
             }
             if (gamepad2.left_stick_y >= 0.1 || gamepad2.left_stick_y <= -0.1) {
                 liftMotor.setPower(-gamepad2.left_stick_y);
