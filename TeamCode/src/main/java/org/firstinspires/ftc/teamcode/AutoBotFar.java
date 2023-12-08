@@ -1,15 +1,15 @@
 package org.firstinspires.ftc.teamcode;
 
-import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
-
-@Autonomous
-public class AutoBot extends FO_MechanumOpMode{
+public class AutoBotFar extends FO_MechanumOpMode{
     Auto DriveTrain = new Auto();
     @Override
     public void runOpMode() throws InterruptedException {
         DriveTrain = new Auto();
         waitForStart();
         if (isStopRequested()) return;
-        DriveTrain.Drive("Forward", 5000);
+        DriveTrain.Drive("Forward", 4000);
+        DriveTrain.Strafe("Right", 7000);
+        DriveTrain.Drive("Reverse", 4000);
+        DriveTrain.Strafe("Right", 3000);
     }
 }
