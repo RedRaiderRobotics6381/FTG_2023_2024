@@ -124,23 +124,6 @@ public class FO_MechanumOpMode extends LinearOpMode {
         waitForStart();
         if (isStopRequested()) return;
         while (opModeIsActive()) {
-            double LeftStickX;
-            double LeftStickY;
-            double RightStickX;
-
-            LeftStickX = gamepad1.left_stick_x / 1.25;
-            LeftStickY = gamepad1.left_stick_y / 1.25;
-            RightStickX = gamepad1.right_stick_x / 1.5;
-            backLeftMotor.setPower((LeftStickY - RightStickX) + LeftStickX);
-            backRightMotor.setPower((LeftStickY + RightStickX) - LeftStickX);
-            frontLeftMotor.setPower((LeftStickY - RightStickX) - LeftStickX);
-            frontRightMotor.setPower(LeftStickY + RightStickX + LeftStickX);
-            liftMotor.setPower(-gamepad2.right_stick_y);
-            lift2Motor.setPower(gamepad2.right_stick_y);
-            armMotor.setPower(gamepad2.left_stick_y);
-
-
-/*
             telemetry.addData("armMotor-encoder", armMotor.getCurrentPosition());
             telemetry.addData("liftMotor-encoder", liftMotor.getCurrentPosition());
             telemetry.addData("WOW! red", caleb_sensor.red());
@@ -151,6 +134,7 @@ public class FO_MechanumOpMode extends LinearOpMode {
             // This button choice was made so that it is hard to hit on accident,
             // it can be freely changed based on preference.
             // The equivalent button is start on Xbox-style controllers.
+            /*
             if (gamepad1.start) {
                 navx_device.zeroYaw();
             }
@@ -170,13 +154,13 @@ public class FO_MechanumOpMode extends LinearOpMode {
             double backLeftPower = (rotY - rotX + rx) / denominator;
             double frontRightPower = (rotY - rotX - rx) / denominator;
             double backRightPower = (rotY + rotX - rx) / denominator;
-*/
 
-            /*double denominator = Math.max(Math.abs(y) + Math.abs(x) + Math.abs(rx), 1);
+*/
+            double denominator = Math.max(Math.abs(y) + Math.abs(x) + Math.abs(rx), 1);
             double frontLeftPower = (y + x + rx) / denominator;
             double backLeftPower = (y - x + rx) / denominator;
             double frontRightPower = (y - x - rx) / denominator;
-            double backRightPower = (y + x - rx) / denominator;*/
+            double backRightPower = (y + x - rx) / denominator;
 
             //Field orintation
 
@@ -185,10 +169,10 @@ public class FO_MechanumOpMode extends LinearOpMode {
            // backLeftMotor.setPower(backLeftPower);
            // frontRightMotor.setPower(frontRightPower);
            // backRightMotor.setPower(backRightPower);
-            if (gamepad2.a) {
+            /*if (gamepad2.a) {
                 rightClaw.setPosition(0.5);
                 leftClaw.setPosition(0.5);
-            }
+            }*/
             if (gamepad2.dpad_up) {
                 if (armMotor.getCurrentPosition() >= 10000) {
                     armMotor.setPower(-1);

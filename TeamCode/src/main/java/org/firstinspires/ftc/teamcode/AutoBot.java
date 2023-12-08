@@ -10,6 +10,6 @@ public class AutoBot extends FO_MechanumOpMode{
         DriveTrain = new Auto();
         waitForStart();
         if (isStopRequested()) return;
-        DriveTrain.Drive("Forward", 5000);
+        DriveTrain.Drive("Forward", 121.92);
     }
 }
