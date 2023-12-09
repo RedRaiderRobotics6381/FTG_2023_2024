@@ -43,6 +43,7 @@ public class FO_MechanumOpMode extends LinearOpMode {
     Servo armServo;
     Servo rightOuttake;
     Servo leftOuttake;
+    Servo plane;
     Lift Will;
     ColorSensor caleb_sensor;
     AHRS navx_device;
@@ -64,6 +65,7 @@ public class FO_MechanumOpMode extends LinearOpMode {
         armServo = hardwareMap.servo.get("armServo");
         rightOuttake = hardwareMap.servo.get("rightOuttake");
         leftOuttake = hardwareMap.servo.get("leftOuttake");
+        plane = hardwareMap.servo.get("plane");
         Will = new Lift();
         caleb_sensor = hardwareMap.colorSensor.get("caleb_sensor");
         ElapsedTime runtime = new ElapsedTime();
@@ -94,8 +96,16 @@ public class FO_MechanumOpMode extends LinearOpMode {
         backRightMotor.setDirection(DcMotorSimple.Direction.REVERSE);
         liftMotor.setDirection(DcMotorSimple.Direction.REVERSE);
         armMotor.setDirection(DcMotorSimple.Direction.REVERSE);
-        rightClaw.setDirection(Servo.Direction.REVERSE);
-        rightClawRot.setDirection(Servo.Direction.REVERSE);
+        leftClawRot.setDirection(Servo.Direction.REVERSE);
+        rightClawRot.setPosition(0.65);
+        leftClawRot.setPosition(0.65);
+        leftClaw.setPosition(0.61);
+        rightClaw.setPosition(0.61);
+        armServo.setPosition(0.515);
+        leftOuttake.setPosition(1);
+        rightOuttake.setPosition(1);
+        plane.setPosition(0.65);
+        leftClaw.setDirection(Servo.Direction.REVERSE);
         navx_device = AHRS.getInstance(hardwareMap.get(NavxMicroNavigationSensor.class, "navx"), AHRS.DeviceDataType.kProcessedData, NAVX_DEVICE_UPDATE_RATE_HZ);
         yawPIDController = new navXPIDController( navx_device, navXPIDController.navXTimestampedDataSource.YAW);
         /* Configure the PID controller */
@@ -173,7 +183,7 @@ public class FO_MechanumOpMode extends LinearOpMode {
                 rightClaw.setPosition(0.5);
                 leftClaw.setPosition(0.5);
             }*/
-            if (gamepad2.dpad_up) {
+            if (gamepad1.dpad_up) {
                 if (armMotor.getCurrentPosition() >= 10000) {
                     armMotor.setPower(-1);
                 } else if (armMotor.getCurrentPosition() <= 0) {
@@ -213,6 +223,32 @@ public class FO_MechanumOpMode extends LinearOpMode {
                 Will.middle();
             } else if (gamepad2.x) {
                 Will.top();
+            }
+            if (gamepad2.left_bumper) {
+                armServo.setPosition(0.515);
+            } else if (gamepad2.right_bumper) {
+                armServo.setPosition(0.545);
+            }
+            if (gamepad2.dpad_left) {
+                rightClaw.setPosition(0);
+                rightClaw.setPosition(0);
+            } else if (gamepad2.dpad_right) {
+                rightClaw.setPosition(0.61);
+                rightClaw.setPosition(0.61);
+            }
+            if (gamepad2.dpad_down) {
+                leftOuttake.setPosition(0.85);
+                rightOuttake.setPosition(0.85);
+            } else if (gamepad2.dpad_up){
+                leftOuttake.setPosition(1);
+                rightOuttake.setPosition(1);
+            }
+            if (gamepad2.left_trigger > 0.25) {
+                leftClawRot.setPosition(0.47);
+                rightClawRot.setPosition(0.47);
+            } else if (gamepad2.right_trigger > 0.25) {
+                leftClawRot.setPosition(0.65);
+                rightClawRot.setPosition(0.65);
             }
             if (gamepad2.left_stick_y >= 0.1 || gamepad2.left_stick_y <= -0.1) {
                 liftMotor.setPower(-gamepad2.left_stick_y);
