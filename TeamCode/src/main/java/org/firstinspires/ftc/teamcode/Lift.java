@@ -9,6 +9,7 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
+import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.hardware.ServoController;
 import com.qualcomm.robotcore.util.ElapsedTime;
@@ -26,18 +27,32 @@ import org.openftc.easyopencv.OpenCvWebcam;
 import org.firstinspires.ftc.teamcode.FO_MechanumOpMode;
 
 public class Lift extends FO_MechanumOpMode {
-
-
+    public DcMotor lift2Motor, liftMotor;
+    public Lift(HardwareMap hardwareMap){
+        liftMotor = hardwareMap.dcMotor.get("liftMotor");
+        lift2Motor = hardwareMap.dcMotor.get("lift2Motor");
+    }
         public void down() {
-            if (liftMotor.getCurrentPosition() < 0) {
-                liftMotor.setPower(1);
-                lift2Motor.setPower(1);
+        liftMotor.setTargetPosition(1500);
+          while (liftMotor.getCurrentPosition() <= 1500){
+              liftMotor.setPower(0.1);
+              lift2Motor.setPower(0.1);
+          }
+          liftMotor.setPower(0);
+          lift2Motor.setPower(0);
+
+            /*
+              if (liftMotor.getCurrentPosition() < 0) {
+                liftMotor.setPower(0.2);
+                lift2Motor.setPower(0.2);
                 keepGoing = true;
             } else if (liftMotor.getCurrentPosition() > 0) {
-                liftMotor.setPower(-1);
-                lift2Motor.setPower(-1);
+                liftMotor.setPower(-0.2);
+                lift2Motor.setPower(-0.2);
                 keepGoing = true;
             }
+
+             */
         }
         public void middle() {
             if (liftMotor.getCurrentPosition() > 1500) {

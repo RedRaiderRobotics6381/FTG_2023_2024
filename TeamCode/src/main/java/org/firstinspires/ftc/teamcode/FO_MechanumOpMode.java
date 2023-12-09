@@ -9,6 +9,7 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
+import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.hardware.ServoController;
 import com.qualcomm.robotcore.util.ElapsedTime;
@@ -28,23 +29,11 @@ import org.openftc.apriltag.AprilTagDetection;
 import java.text.DecimalFormat;
 @TeleOp
 public class FO_MechanumOpMode extends LinearOpMode {
+
     OpenCvWebcam webcam;
-    public DcMotor liftMotor;
-    public DcMotor lift2Motor;
-    public DcMotor frontLeftMotor;
-    public DcMotor backLeftMotor;
-    public DcMotor frontRightMotor;
-    public DcMotor backRightMotor;
-    DcMotor armMotor;
-    Servo rightClaw;
-    Servo leftClaw;
-    Servo rightClawRot;
-    Servo leftClawRot;
-    Servo armServo;
-    Servo rightOuttake;
-    Servo leftOuttake;
-    Servo plane;
-    Lift Will;
+    public DcMotor frontRightMotor, backRightMotor, backLeftMotor, frontLeftMotor, lift2Motor, liftMotor, armMotor;
+    public Servo rightClaw, leftClaw, rightClawRot, leftClawRot, armServo, rightOuttake, leftOuttake, plane;
+    public Lift Will;
     ColorSensor caleb_sensor;
     AHRS navx_device;
     navXPIDController yawPIDController;
@@ -58,16 +47,17 @@ public class FO_MechanumOpMode extends LinearOpMode {
         frontRightMotor = hardwareMap.dcMotor.get("frontRightMotor");
         backRightMotor = hardwareMap.dcMotor.get("backRightMotor");
         armMotor = hardwareMap.dcMotor.get("armMotor");
-        rightClaw = hardwareMap.servo.get("rightClaw");
+        rightClaw = hardwareMap.get(Servo.class, "rightClaw");
         leftClaw = hardwareMap.servo.get("leftClaw");
         rightClawRot = hardwareMap.servo.get("rightClawRot");
         leftClawRot = hardwareMap.servo.get("leftClawRot");
         armServo = hardwareMap.servo.get("armServo");
-        rightOuttake = hardwareMap.servo.get("rightOuttake");
+        rightOuttake = hardwareMap.get(Servo.class, "rightOuttake");
         leftOuttake = hardwareMap.servo.get("leftOuttake");
         plane = hardwareMap.servo.get("plane");
-        Will = new Lift();
+        Will = new Lift(hardwareMap);
         caleb_sensor = hardwareMap.colorSensor.get("caleb_sensor");
+
         ElapsedTime runtime = new ElapsedTime();
         final byte NAVX_DEVICE_UPDATE_RATE_HZ = 50;
         final double TARGET_ANGLE_DEGREES = 90.0;

@@ -1,14 +1,18 @@
 package org.firstinspires.ftc.teamcode;
 
-public class AutoBotFar extends FO_MechanumOpMode{
-    Auto DriveTrain = new Auto();
+import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
+import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
+import com.qualcomm.robotcore.hardware.Servo;
 
+@Autonomous
+public class AutoBotFar extends LinearOpMode {
+    Auto DriveTrain;
+    Lift Will = new Lift(hardwareMap);
+    Servo rightOuttake = hardwareMap.servo.get("rightOuttake");
+    Servo leftOuttake = hardwareMap.servo.get("leftOuttake");
     @Override
     public void runOpMode() throws InterruptedException {
-        DriveTrain = new Auto();
-
-        rightOuttake.setPosition(0.85);
-        leftOuttake.setPosition(0.85);
+        DriveTrain = new Auto(hardwareMap);
 
         waitForStart();
         if (isStopRequested()) return;
