@@ -25,6 +25,7 @@ import org.openftc.easyopencv.OpenCvCameraFactory;
 import org.openftc.easyopencv.OpenCvCameraRotation;
 import org.openftc.easyopencv.OpenCvPipeline;
 import org.openftc.easyopencv.OpenCvWebcam;
+import org.firstinspires.ftc.teamcode.AutoSubsystems.Lift;
 import org.openftc.apriltag.AprilTagDetection;
 import java.text.DecimalFormat;
 @TeleOp
