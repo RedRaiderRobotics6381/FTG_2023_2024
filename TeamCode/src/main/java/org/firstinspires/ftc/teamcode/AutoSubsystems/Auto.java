@@ -31,7 +31,9 @@ public class Auto{
     }
     public void Drive(String direction, double centimeters) {
         long milliseconds = Math.round(centimeters * secPerCm) * 1000;
+            while (frontLeftMotor.isBusy() || backLeftMotor.isBusy() || frontRightMotor.isBusy() || backRightMotor.isBusy()){
 
+            }
             if (direction.equals("Forward")) {
                 frontLeftMotor.setPower(SpeedOfAuto);
                 backLeftMotor.setPower(SpeedOfAuto);

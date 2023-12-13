@@ -35,7 +35,7 @@ public class FO_MechanumOpMode extends LinearOpMode {
     public DcMotor frontRightMotor, backRightMotor, backLeftMotor, frontLeftMotor, lift2Motor, liftMotor, armMotor;
     public Servo rightClaw, leftClaw, rightClawRot, leftClawRot, armServo, rightOuttake, leftOuttake, plane;
     public Lift Will;
-    ColorSensor caleb_sensor;
+    ColorSensor color_sensor;
     AHRS navx_device;
     navXPIDController yawPIDController;
      public boolean keepGoing = false;
@@ -57,7 +57,7 @@ public class FO_MechanumOpMode extends LinearOpMode {
         leftOuttake = hardwareMap.servo.get("leftOuttake");
         plane = hardwareMap.servo.get("plane");
         Will = new Lift(hardwareMap);
-        caleb_sensor = hardwareMap.colorSensor.get("caleb_sensor");
+        color_sensor = hardwareMap.colorSensor.get("color_sensor");
 
         ElapsedTime runtime = new ElapsedTime();
         final byte NAVX_DEVICE_UPDATE_RATE_HZ = 50;
@@ -127,8 +127,11 @@ public class FO_MechanumOpMode extends LinearOpMode {
         while (opModeIsActive()) {
             telemetry.addData("armMotor-encoder", armMotor.getCurrentPosition());
             telemetry.addData("liftMotor-encoder", liftMotor.getCurrentPosition());
-            telemetry.addData("WOW! red", caleb_sensor.red());
+            telemetry.addData("WOW! red", color_sensor.red());
             telemetry.update();
+            if (color_sensor.red() > 5000){
+
+            }
             y = -gamepad1.left_stick_y * z; // Remember, Y stick value is reversed
             x = gamepad1.left_stick_x * z;
             rx = gamepad1.right_stick_x * z;
@@ -199,6 +202,7 @@ public class FO_MechanumOpMode extends LinearOpMode {
             }
 
             /** test to find upper and lower limits
+             *
              * if(liftMotor.getCurrentPosition <= (upper limit) && liftMotor.getCurrentPosition ></=>= (lower limit)){
              *   liftMotor.setPower(gamepad2.left_stick_y);
              * } else if (liftMotor.getCurrentPosition > (upper limit)){
@@ -207,6 +211,21 @@ public class FO_MechanumOpMode extends LinearOpMode {
              * liftMotor.setPower(Math.abs(gamepad2.left_stick_y)););
              * }
              */
+            if(gamepad2.left_stick_y >= 0.15 || gamepad2.left_stick_y <= -0.15) {
+                if (liftMotor.getCurrentPosition() <= 2900 && liftMotor.getCurrentPosition() >= 0) {
+                    liftMotor.setPower((gamepad2.left_stick_y) / 4);
+                    lift2Motor.setPower((gamepad2.left_stick_y) / 4);
+                } else if (liftMotor.getCurrentPosition() > 2900) {
+                    liftMotor.setPower(-Math.abs(gamepad2.left_stick_y) / 4);
+                    lift2Motor.setPower(-Math.abs(gamepad2.left_stick_y) / 4);
+                } else if (liftMotor.getCurrentPosition() < 0) {
+                    liftMotor.setPower(Math.abs(gamepad2.left_stick_y) / 4);
+                    lift2Motor.setPower(Math.abs(gamepad2.left_stick_y) / 4);
+                } else {
+                    liftMotor.setPower(0);
+                    lift2Motor.setPower(0);
+                }
+            }
 
             if (gamepad2.a) {
                 Will.down();
@@ -222,10 +241,10 @@ public class FO_MechanumOpMode extends LinearOpMode {
             }
             if (gamepad2.dpad_left) {
                 rightClaw.setPosition(0);
-                rightClaw.setPosition(0);
+                leftClaw.setPosition(0);
             } else if (gamepad2.dpad_right) {
                 rightClaw.setPosition(0.61);
-                rightClaw.setPosition(0.61);
+                leftClaw.setPosition(0.61);
             }
             if (gamepad2.dpad_down) {
                 leftOuttake.setPosition(0.85);
@@ -247,21 +266,6 @@ public class FO_MechanumOpMode extends LinearOpMode {
                 sleep(10);
                 liftMotor.setPower(0);
                 lift2Motor.setPower(0);
-            }
-            if (liftMotor.getCurrentPosition() > 2900 && liftMotor.getPower() > 0) {
-                liftMotor.setPower(0);
-                lift2Motor.setPower(0);
-            }
-            if (liftMotor.getCurrentPosition() < 0 && liftMotor.getPower() < 0) {
-                liftMotor.setPower(0);
-                lift2Motor.setPower(0);
-            }
-            if (!keepGoing) {
-                if (liftMotor.getCurrentPosition() < 1600 && liftMotor.getCurrentPosition() > 1400) {
-                    liftMotor.setPower(0);
-                    lift2Motor.setPower(0);
-                    keepGoing = true;
-                }
             }
         }
     }
