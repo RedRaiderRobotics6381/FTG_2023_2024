@@ -31,21 +31,36 @@ public class Lift extends FO_MechanumOpMode {
     public Lift(HardwareMap hardwareMap){
         liftMotor = hardwareMap.dcMotor.get("liftMotor");
         lift2Motor = hardwareMap.dcMotor.get("lift2Motor");
-        liftMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        lift2Motor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        lift2Motor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        liftMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         liftMotor.setDirection(DcMotorSimple.Direction.REVERSE);
     }
         public void down() {
-          liftMotor.setTargetPosition(0);
+            liftMotor.setTargetPosition(0);
+            lift2Motor.setTargetPosition(0);
+            liftMotor.setPower(0.1);
+            lift2Motor.setPower(0.1);
+            liftMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+            lift2Motor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+/*
+            liftMotor.setTargetPosition(0);
           lift2Motor.setTargetPosition(0);
           while (liftMotor.getCurrentPosition() >= 0){
               liftMotor.setPower(-0.1);
               lift2Motor.setPower(-0.1);
           }
           liftMotor.setPower(0);
-          lift2Motor.setPower(0);
+          lift2Motor.setPower(0);*/
      }
         public void middle() {
+            liftMotor.setTargetPosition(1500);
+            lift2Motor.setTargetPosition(1500);
+            liftMotor.setPower(0.1);
+            lift2Motor.setPower(0.1);
+            liftMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+            lift2Motor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+
+            /*
             liftMotor.setTargetPosition(1500);
             lift2Motor.setTargetPosition(1500);
             while (liftMotor.getCurrentPosition() < 1400) {
@@ -57,9 +72,16 @@ public class Lift extends FO_MechanumOpMode {
                 lift2Motor.setPower(-0.1);
             }
             liftMotor.setPower(0);
-            lift2Motor.setPower(0);
+            lift2Motor.setPower(0);*/
         }
         public void top(){
+            liftMotor.setTargetPosition(2900);
+            lift2Motor.setTargetPosition(2900);
+            liftMotor.setPower(0.1);
+            lift2Motor.setPower(0.1);
+            liftMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+            lift2Motor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+            /*
             liftMotor.setTargetPosition(2900);
             lift2Motor.setTargetPosition(2900);
             while (liftMotor.getCurrentPosition() <= 2900){
@@ -67,6 +89,6 @@ public class Lift extends FO_MechanumOpMode {
                 lift2Motor.setPower(0.1);
             }
             liftMotor.setPower(0);
-            lift2Motor.setPower(0);
+            lift2Motor.setPower(0);*/
         }
     }
